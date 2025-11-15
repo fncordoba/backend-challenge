@@ -1,15 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { CreateTransactionUseCase } from './create-transaction.usecase';
 import { IUserRepository } from '../../domain/ports/user-repository.interface';
 import { ITransactionRepository } from '../../domain/ports/transaction-repository.interface';
+import { IOutboxRepository } from '../../domain/ports/outbox-repository.interface';
 import { IDbConnection } from '../../shared/db/db-connection.interface';
 import { ICache } from '../../shared/cache/cache.interface';
-import {
-  USER_REPOSITORY_TOKEN,
-  TRANSACTION_REPOSITORY_TOKEN,
-  DB_CONNECTION_TOKEN,
-  CACHE_TOKEN,
-} from '../../shared/di/tokens';
 import { User } from '../../domain/entities/user.entity';
 import { Transaction } from '../../domain/entities/transaction.entity';
 import { InsufficientFundsException, UserNotFoundException } from '../../domain/exceptions/domain.exceptions';
@@ -19,11 +14,12 @@ describe('CreateTransactionUseCase', () => {
   let useCase: CreateTransactionUseCase;
   let userRepository: jest.Mocked<IUserRepository>;
   let transactionRepository: jest.Mocked<ITransactionRepository>;
+  let outboxRepository: jest.Mocked<IOutboxRepository>;
   let dbConnection: jest.Mocked<IDbConnection>;
   let cache: jest.Mocked<ICache>;
   let queryRunner: jest.Mocked<QueryRunner>;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     queryRunner = {
       startTransaction: jest.fn(),
       commitTransaction: jest.fn(),
@@ -31,57 +27,58 @@ describe('CreateTransactionUseCase', () => {
       release: jest.fn(),
     } as any;
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CreateTransactionUseCase,
-        {
-          provide: USER_REPOSITORY_TOKEN,
-          useValue: {
-            findById: jest.fn(),
-            findByIdForUpdate: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-          },
-        },
-        {
-          provide: TRANSACTION_REPOSITORY_TOKEN,
-          useValue: {
-            findById: jest.fn(),
-            findByUserId: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
-          },
-        },
-        {
-          provide: DB_CONNECTION_TOKEN,
-          useValue: {
-            createQueryRunner: jest.fn().mockResolvedValue(queryRunner),
-          },
-        },
-        {
-          provide: CACHE_TOKEN,
-          useValue: {
-            get: jest.fn(),
-            set: jest.fn(),
-            del: jest.fn(),
-            delPattern: jest.fn(),
-          },
-        },
-      ],
-    }).compile();
+    userRepository = {
+      findById: jest.fn(),
+      findByIdForUpdate: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    } as any;
 
-    useCase = module.get<CreateTransactionUseCase>(CreateTransactionUseCase);
-    userRepository = module.get(USER_REPOSITORY_TOKEN);
-    transactionRepository = module.get(TRANSACTION_REPOSITORY_TOKEN);
-    dbConnection = module.get(DB_CONNECTION_TOKEN);
-    cache = module.get(CACHE_TOKEN);
+    transactionRepository = {
+      findById: jest.fn(),
+      findByUserId: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    } as any;
+
+    outboxRepository = {
+      insert: jest.fn(),
+      fetchPending: jest.fn(),
+      markProcessed: jest.fn(),
+      markFailed: jest.fn(),
+    } as any;
+
+    dbConnection = {
+      createQueryRunner: jest.fn().mockResolvedValue(queryRunner),
+    } as any;
+
+    cache = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      delPattern: jest.fn(),
+    } as any;
+
+    useCase = new CreateTransactionUseCase(
+      userRepository,
+      transactionRepository,
+      dbConnection,
+      outboxRepository,
+      cache,
+    );
   });
 
   it('should throw error for negative amount', async () => {
     const dto = { originId: 'user-1', destinationId: 'user-2', amount: -100 };
 
     await expect(useCase.execute(dto)).rejects.toThrow('Amount must be positive');
+  });
+
+  it('should throw error when origin and destination are the same', async () => {
+    const dto = { originId: 'user-1', destinationId: 'user-1', amount: 1000 };
+
+    await expect(useCase.execute(dto)).rejects.toThrow('Origin and destination cannot be the same');
   });
 
   it('should throw error when origin user not found', async () => {
@@ -133,6 +130,13 @@ describe('CreateTransactionUseCase', () => {
     expect(userRepository.update).toHaveBeenCalledTimes(2);
     expect(transactionRepository.create).toHaveBeenCalled();
     expect(queryRunner.commitTransaction).toHaveBeenCalled();
+    expect(outboxRepository.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'transaction.confirmed',
+        status: 'pending',
+      }),
+      queryRunner,
+    );
   });
 
   it('should create pending transaction for amount > 50000', async () => {
@@ -158,6 +162,13 @@ describe('CreateTransactionUseCase', () => {
     expect(userRepository.update).not.toHaveBeenCalled();
     expect(transactionRepository.create).toHaveBeenCalled();
     expect(queryRunner.commitTransaction).toHaveBeenCalled();
+    expect(outboxRepository.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'transaction.pending',
+        status: 'pending',
+      }),
+      queryRunner,
+    );
   });
 
   it('should rollback transaction on error', async () => {

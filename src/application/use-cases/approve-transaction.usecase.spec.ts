@@ -1,15 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ApproveTransactionUseCase } from './approve-transaction.usecase';
 import { IUserRepository } from '../../domain/ports/user-repository.interface';
 import { ITransactionRepository } from '../../domain/ports/transaction-repository.interface';
+import { IOutboxRepository } from '../../domain/ports/outbox-repository.interface';
 import { IDbConnection } from '../../shared/db/db-connection.interface';
 import { ICache } from '../../shared/cache/cache.interface';
-import {
-  USER_REPOSITORY_TOKEN,
-  TRANSACTION_REPOSITORY_TOKEN,
-  DB_CONNECTION_TOKEN,
-  CACHE_TOKEN,
-} from '../../shared/di/tokens';
 import { Transaction } from '../../domain/entities/transaction.entity';
 import { User } from '../../domain/entities/user.entity';
 import {
@@ -23,10 +18,12 @@ describe('ApproveTransactionUseCase', () => {
   let useCase: ApproveTransactionUseCase;
   let userRepository: jest.Mocked<IUserRepository>;
   let transactionRepository: jest.Mocked<ITransactionRepository>;
+  let outboxRepository: jest.Mocked<IOutboxRepository>;
   let dbConnection: jest.Mocked<IDbConnection>;
+  let cache: jest.Mocked<ICache>;
   let queryRunner: jest.Mocked<QueryRunner>;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     queryRunner = {
       startTransaction: jest.fn(),
       commitTransaction: jest.fn(),
@@ -34,50 +31,46 @@ describe('ApproveTransactionUseCase', () => {
       release: jest.fn(),
     } as any;
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ApproveTransactionUseCase,
-        {
-          provide: USER_REPOSITORY_TOKEN,
-          useValue: {
-            findById: jest.fn(),
-            findByIdForUpdate: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-          },
-        },
-        {
-          provide: TRANSACTION_REPOSITORY_TOKEN,
-          useValue: {
-            findById: jest.fn(),
-            findByUserId: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
-          },
-        },
-        {
-          provide: DB_CONNECTION_TOKEN,
-          useValue: {
-            createQueryRunner: jest.fn().mockResolvedValue(queryRunner),
-          },
-        },
-        {
-          provide: CACHE_TOKEN,
-          useValue: {
-            get: jest.fn(),
-            set: jest.fn(),
-            del: jest.fn(),
-            delPattern: jest.fn(),
-          },
-        },
-      ],
-    }).compile();
+    userRepository = {
+      findById: jest.fn(),
+      findByIdForUpdate: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    } as any;
 
-    useCase = module.get<ApproveTransactionUseCase>(ApproveTransactionUseCase);
-    userRepository = module.get(USER_REPOSITORY_TOKEN);
-    transactionRepository = module.get(TRANSACTION_REPOSITORY_TOKEN);
-    dbConnection = module.get(DB_CONNECTION_TOKEN);
+    transactionRepository = {
+      findById: jest.fn(),
+      findByUserId: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    } as any;
+
+    outboxRepository = {
+      insert: jest.fn(),
+      fetchPending: jest.fn(),
+      markProcessed: jest.fn(),
+      markFailed: jest.fn(),
+    } as any;
+
+    dbConnection = {
+      createQueryRunner: jest.fn().mockResolvedValue(queryRunner),
+    } as any;
+
+    cache = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      delPattern: jest.fn(),
+    } as any;
+
+    useCase = new ApproveTransactionUseCase(
+      userRepository,
+      transactionRepository,
+      dbConnection,
+      outboxRepository,
+      cache,
+    );
   });
 
   it('should throw error when transaction not found', async () => {
