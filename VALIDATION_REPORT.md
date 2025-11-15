@@ -2,38 +2,41 @@
 
 ## Endpoints Requeridos
 
-### 1. POST /transactions ✅
+### 1. POST /users ✅
+**Estado:** Implementado y validado manualmente
+- **Ubicación:** `src/controllers/users.controller.ts`
+- **Funcionalidad:** Crea un nuevo usuario (nombre, email, balance) para no depender solo del seed
+
+### 2. POST /transactions ✅
 **Estado:** Implementado y testado
 - **Ubicación:** `src/controllers/transactions.controller.ts:30-38`
 - **Tests Unitarios:** `src/application/use-cases/create-transaction.usecase.spec.ts`
-- **Tests Integración:** `test/transactions.integration.spec.ts:53-71`
+- **Validación manual:** cURL + SQL (`CURL_COMMANDS.md`, `SQL_VALIDATION.md`)
 - **Funcionalidad:** Crea una nueva transacción entre dos usuarios
 
-### 2. GET /transactions?userId={userId} ✅
-**Estado:** Implementado y testado
+### 3. GET /transactions?userId={userId} ✅
+**Estado:** Implementado y validado manualmente
 - **Ubicación:** `src/controllers/transactions.controller.ts:40-46`
-- **Tests Integración:** `test/transactions.integration.spec.ts:116-144`
 - **Funcionalidad:** Lista transacciones de un usuario (origen o destino), ordenadas por fecha
 
-### 3. PATCH /transactions/:id/approve ✅
+### 4. PATCH /transactions/:id/approve ✅
 **Estado:** Implementado y testado
 - **Ubicación:** `src/controllers/transactions.controller.ts:48-56`
 - **Tests Unitarios:** `src/application/use-cases/approve-transaction.usecase.spec.ts`
-- **Tests Integración:** `test/transactions.integration.spec.ts:93-114`
+- **Validación manual:** cURL + SQL (verificación de balances y outbox)
 - **Funcionalidad:** Aprueba una transacción pendiente y realiza el movimiento de fondos
 
-### 4. PATCH /transactions/:id/reject ✅
+### 5. PATCH /transactions/:id/reject ✅
 **Estado:** Implementado
 - **Ubicación:** `src/controllers/transactions.controller.ts:58-66`
 - **Tests Unitarios:** No implementado (use-case existe pero sin tests)
-- **Tests Integración:** No implementado
 - **Funcionalidad:** Rechaza una transacción pendiente sin modificar saldos
 
 **Resumen Endpoints:**
-- ✅ 4/4 endpoints implementados
-- ✅ 3/4 endpoints con tests unitarios
-- ✅ 3/4 endpoints con tests de integración
-- ⚠️ 1/4 endpoint (reject) sin tests
+- ✅ 5/5 endpoints implementados
+- ✅ 2/5 endpoints con tests unitarios (casos de uso de creación y aprobación)
+- ✅ Todos los endpoints validados manualmente con cURL y SQL
+- ⚠️ Endpoint `reject` sin tests automatizados
 
 ---
 
@@ -79,14 +82,10 @@
   - **Tests:** `create-transaction.usecase.spec.ts:103-111`
 - **4.3. Monto > $50.000 => estado `pending`:**
   - **Ubicación:** `src/application/use-cases/create-transaction.usecase.ts:74`
-  - **Tests:** 
-    - `create-transaction.usecase.spec.ts:138-161` (unit)
-    - `transactions.integration.spec.ts:73-91` (integration)
+  - **Tests:** `create-transaction.usecase.spec.ts:138-161`
 - **4.4. Monto ≤ $50.000 => confirmar automáticamente:**
   - **Ubicación:** `src/application/use-cases/create-transaction.usecase.ts:74, 77-85`
-  - **Tests:** 
-    - `create-transaction.usecase.spec.ts:113-136` (unit)
-    - `transactions.integration.spec.ts:53-71` (integration)
+  - **Tests:** `create-transaction.usecase.spec.ts:113-136`
 - **4.5. Validación de monto positivo:**
   - **Ubicación:** `src/application/use-cases/create-transaction.usecase.ts:44-46`
   - **Tests:** `create-transaction.usecase.spec.ts:81-85`
@@ -104,9 +103,7 @@
   - **Tests:** `approve-transaction.usecase.spec.ts:103-120`
 - **5.3. Realizar movimiento de fondos:**
   - **Ubicación:** `src/application/use-cases/approve-transaction.usecase.ts:57-65`
-  - **Tests:** 
-    - `approve-transaction.usecase.spec.ts:122-149` (unit)
-    - `transactions.integration.spec.ts:93-114` (integration)
+  - **Tests:** `approve-transaction.usecase.spec.ts:122-149`
 
 ### 6. Rechazar transacción pendiente ✅
 **Estado:** Implementado

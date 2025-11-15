@@ -266,14 +266,14 @@ docker-compose up -d
 ```
 Levanta PostgreSQL y Redis.
 
-### Scripts npm
-- `npm run start:dev`: inicia aplicación en modo desarrollo
-- `npm run migrate`: ejecuta migraciones
-- `npm run seed`: crea datos de prueba (3 usuarios)
-- `npm run test`: ejecuta tests unitarios
-- `npm run test:e2e`: ejecuta tests de integración
-- `npm run outbox:worker`: inicia worker de outbox
-- `npm run ci`: lint + tests + build
+### Scripts npm/yarn
+- `yarn start`: inicia la aplicación (NestJS con ts-node)
+- `yarn start:dev`: inicia aplicación en modo desarrollo
+- `yarn migrate`: ejecuta migraciones
+- `yarn seed`: crea datos de prueba (3 usuarios)
+- `yarn test`: ejecuta tests unitarios de casos de uso
+- `yarn outbox:worker`: inicia worker de outbox
+- `yarn ci`: lint + tests + build
 
 ## Decisiones y trade-offs
 
@@ -438,7 +438,5 @@ src/
 │   └── outbox.worker.ts
 ├── app.module.ts
 └── main.ts
-test/
-└── transactions.integration.spec.ts
 ```
 

@@ -22,7 +22,7 @@
     "migrate:revert": "ts-node -r tsconfig-paths/register node_modules/typeorm/cli.js migration:revert -d src/infrastructure/persistence/typeorm/data-source.ts",
     "seed": "ts-node src/infrastructure/persistence/seed.ts",
     "outbox:worker": "ts-node src/workers/outbox.worker.ts",
-    "ci": "npm run lint && npm run test && npm run build"
+    "ci": "yarn lint && yarn test && yarn build"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
