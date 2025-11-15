@@ -14,6 +14,7 @@ import {
 import { Transaction, TransactionStatus } from '../../domain/entities/transaction.entity';
 import {
   InsufficientFundsException,
+  InvalidTransactionStateException,
   UserNotFoundException,
 } from '../../domain/exceptions/domain.exceptions';
 import { QueryRunner } from 'typeorm';
@@ -46,7 +47,7 @@ export class CreateTransactionUseCase {
     }
 
     if (dto.originId === dto.destinationId) {
-      throw new Error('Origin and destination cannot be the same');
+      throw new InvalidTransactionStateException('Origin and destination cannot be the same');
     }
 
     const queryRunner = await this.dbConnection.createQueryRunner();

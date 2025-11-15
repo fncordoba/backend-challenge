@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { TransactionsController } from './controllers/transactions.controller';
+import { UsersController } from './controllers/users.controller';
 import { CreateTransactionUseCase } from './application/use-cases/create-transaction.usecase';
+import { CreateUserUseCase } from './application/use-cases/create-user.usecase';
 import { ApproveTransactionUseCase } from './application/use-cases/approve-transaction.usecase';
 import { RejectTransactionUseCase } from './application/use-cases/reject-transaction.usecase';
 import { ListTransactionsUseCase } from './application/use-cases/list-transactions.usecase';
@@ -38,7 +40,7 @@ import {
     }),
     TypeOrmModule.forFeature([UserEntity, TransactionEntity, OutboxEntity]),
   ],
-  controllers: [TransactionsController],
+  controllers: [TransactionsController, UsersController],
   providers: [
     {
       provide: USER_REPOSITORY_TOKEN,
@@ -61,6 +63,7 @@ import {
       useClass: RedisCacheService,
     },
     CreateTransactionUseCase,
+    CreateUserUseCase,
     ApproveTransactionUseCase,
     RejectTransactionUseCase,
     ListTransactionsUseCase,
