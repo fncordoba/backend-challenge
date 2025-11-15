@@ -198,7 +198,7 @@ SELECT id, "originId", "destinationId", amount
 FROM transactions
 WHERE "originId" = "destinationId";
 ```
-**Resultado esperado:** 0 filas (no debe haber transacciones a sí mismo)
+**Resultado esperado:** 0 filas (no debe haber transacciones a sí mismo; si las hubo en pruebas tempranas, deberían haberse corregido)
 
 ## Validación de Outbox Pattern
 

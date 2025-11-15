@@ -23,7 +23,8 @@ Patrones arquitecturales:
 ## Capas y responsabilidades
 
 ### Controllers (adapters)
-- `controllers/transactions.controller.ts`: convierte requests HTTP a DTOs y llama a use-cases
+- `controllers/transactions.controller.ts`: convierte requests HTTP a DTOs y llama a use-cases de transacciones
+- `controllers/users.controller.ts`: expone endpoints para crear usuarios sin depender solo del seed
 - Sin lógica de negocio, solo validación de entrada y transformación de salida
 
 ### Application (use-cases)
@@ -31,6 +32,7 @@ Patrones arquitecturales:
 - `application/use-cases/approve-transaction.usecase.ts`: aprueba transacciones pendientes
 - `application/use-cases/reject-transaction.usecase.ts`: rechaza transacciones pendientes
 - `application/use-cases/list-transactions.usecase.ts`: lista transacciones de un usuario
+- `application/use-cases/create-user.usecase.ts`: crea usuarios a partir de `CreateUserDTO`
 
 Cada use-case:
 - Orquesta la lógica de negocio
@@ -44,6 +46,35 @@ Cada use-case:
 - `domain/exceptions/domain.exceptions.ts`: excepciones específicas del dominio
 - `domain/ports/`: interfaces de repositorios (IUserRepository, ITransactionRepository, IOutboxRepository)
 
+#### Diagrama de dominio
+
+```mermaid
+classDiagram
+    class User {
+      +id: string
+      +name: string
+      +email: string
+      +balance: number
+      +version?: number
+      +hasSufficientBalance(amount): boolean
+      +debit(amount): void
+      +credit(amount): void
+    }
+
+    class Transaction {
+      +id: string
+      +originId: string
+      +destinationId: string
+      +amount: number
+      +status: TransactionStatus
+      +createdAt: Date
+      +updatedAt?: Date
+    }
+
+    User "1" <-- "many" Transaction : origin
+    User "1" <-- "many" Transaction : destination
+```
+
 ### Infrastructure
 - `infrastructure/persistence/typeorm/`: implementaciones concretas de repositorios
   - `repositories/user.repository.ts`: implementa IUserRepository con TypeORM
@@ -53,11 +84,54 @@ Cada use-case:
 - `infrastructure/cache/redis-cache.service.ts`: implementación de cache con Redis
 - `infrastructure/persistence/typeorm/db-connection.service.ts`: servicio para manejo de transacciones
 
+#### Diagrama de infraestructura (repositorios)
+
+```mermaid
+graph TD
+    IUserRepository --> UserRepository
+    ITransactionRepository --> TransactionRepository
+    IOutboxRepository --> OutboxRepository
+
+    UserRepository --> UserEntity
+    TransactionRepository --> TransactionEntity
+    OutboxRepository --> OutboxEntity
+
+    UserEntity --> Postgres[(PostgreSQL)]
+    TransactionEntity --> Postgres
+    OutboxEntity --> Postgres
+```
+
 ### Shared
 - `shared/dto/`: DTOs para validación de entrada
 - `shared/repositories/abstract-identity.repository.ts`: clase abstracta base para repositorios de identidades
 - `shared/db/db-connection.interface.ts`: interfaz para manejo de transacciones
 - `shared/cache/cache.interface.ts`: interfaz para cache
+- `shared/errors/error-codes.ts`: diccionario de códigos de error de negocio/técnicos
+- `shared/filters/global-exception.filter.ts`: filtro global que mapea excepciones a respuestas HTTP con códigos de error
+
+#### Diagrama de aplicación (use-cases y puertos)
+
+```mermaid
+graph TD
+    CreateTransactionUseCase --> IUserRepository
+    CreateTransactionUseCase --> ITransactionRepository
+    CreateTransactionUseCase --> IOutboxRepository
+    CreateTransactionUseCase --> IDbConnection
+    CreateTransactionUseCase --> ICache
+
+    ApproveTransactionUseCase --> IUserRepository
+    ApproveTransactionUseCase --> ITransactionRepository
+    ApproveTransactionUseCase --> IOutboxRepository
+    ApproveTransactionUseCase --> IDbConnection
+    ApproveTransactionUseCase --> ICache
+
+    RejectTransactionUseCase --> ITransactionRepository
+    RejectTransactionUseCase --> IOutboxRepository
+    RejectTransactionUseCase --> IDbConnection
+    RejectTransactionUseCase --> ICache
+
+    CreateUserUseCase --> IUserRepository
+```
 
 ## Repositorios y abstracciones
 
@@ -167,22 +241,13 @@ Si Redis no está disponible, las operaciones continúan sin cache (fail-silent)
 - **Tests unitarios**: use-cases con repositorios mockeados
   - Foco en reglas de negocio
   - Validaciones, excepciones, flujos exitosos
-  - Ejemplos: `create-transaction.usecase.spec.ts`, `approve-transaction.usecase.spec.ts`
+  - Archivos: `create-transaction.usecase.spec.ts`, `approve-transaction.usecase.spec.ts`
 
-- **Tests de integración**: flujos críticos sobre DB real
-  - Crear transacción ≤50k y verificar saldos
-  - Crear transacción >50k y verificar estado pending
-  - Aprobar transacción pendiente y verificar saldos
-  - Listar transacciones
-  - Ejemplo: `test/transactions.integration.spec.ts`
+- **Validación end-to-end manual**:
+  - cURL para probar endpoints (`CURL_COMMANDS.md`)
+  - SQL para validar saldos, estados y outbox (`SQL_VALIDATION.md`)
 
-- **Tests de controladores**: solo smoke tests (status codes)
-  - No se implementan tests exhaustivos de controllers
-  - La lógica está en use-cases que sí se testean
-
-### Cobertura objetivo
-- 80%+ en use-cases críticos
-- 100% en reglas de negocio (validaciones, excepciones)
+- **Tests de controladores**: no se incluyen; la lógica de negocio vive en use-cases
 
 ## Observabilidad y logs
 

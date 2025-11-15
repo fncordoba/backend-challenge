@@ -8,7 +8,21 @@ Comandos listos para copiar y pegar en la terminal para probar todos los endpoin
 curl http://localhost:3000/api-docs
 ```
 
-## 1. Crear Transacción <= 50k (Se confirma automáticamente)
+## 1. Crear Usuario (para no depender solo del seed)
+
+```bash
+curl -X POST http://localhost:3000/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Ana Gomez",
+    "email": "ana@example.com",
+    "balance": 50000
+  }'
+```
+
+**Resultado esperado:** Status 201, JSON con `id`, `name`, `email`, `balance`
+
+## 2. Crear Transacción <= 50k (Se confirma automáticamente)
 
 ```bash
 curl -X POST http://localhost:3000/transactions \
@@ -22,7 +36,7 @@ curl -X POST http://localhost:3000/transactions \
 
 **Resultado esperado:** Status 201, transacción con `status: "confirmed"`
 
-## 2. Crear Transacción > 50k (Queda pendiente)
+## 3. Crear Transacción > 50k (Queda pendiente con saldo suficiente)
 
 ```bash
 curl -X POST http://localhost:3000/transactions \
@@ -36,7 +50,7 @@ curl -X POST http://localhost:3000/transactions \
 
 **Resultado esperado:** Status 201, transacción con `status: "pending"`
 
-## 3. Listar Transacciones de un Usuario
+## 4. Listar Transacciones de un Usuario
 
 ```bash
 curl "http://localhost:3000/transactions?userId=user-1"
@@ -44,7 +58,7 @@ curl "http://localhost:3000/transactions?userId=user-1"
 
 **Resultado esperado:** Status 200, array de transacciones ordenadas por fecha
 
-## 4. Aprobar Transacción Pendiente
+## 5. Aprobar Transacción Pendiente
 
 Primero necesitas el ID de una transacción pendiente. Luego:
 
@@ -59,7 +73,7 @@ curl -X PATCH http://localhost:3000/transactions/abc123-def456-ghi789/approve
 
 **Resultado esperado:** Status 200, transacción con `status: "confirmed"` y balances actualizados
 
-## 5. Rechazar Transacción Pendiente
+## 6. Rechazar Transacción Pendiente
 
 ```bash
 curl -X PATCH http://localhost:3000/transactions/{TRANSACTION_ID}/reject
@@ -146,7 +160,15 @@ curl -X POST http://localhost:3000/transactions \
   }'
 ```
 
-**Resultado esperado:** Status 404 o 400 con mensaje de error
+**Resultado esperado:** Status 404 con body similar a:
+```json
+{
+  "code": "USER_NOT_FOUND",
+  "message": "User user-999 not found",
+  "path": "/transactions",
+  "timestamp": "..."
+}
+```
 
 ### Error: Saldo insuficiente
 ```bash
@@ -159,7 +181,15 @@ curl -X POST http://localhost:3000/transactions \
   }'
 ```
 
-**Resultado esperado:** Status 400 con mensaje "Insufficient funds"
+**Resultado esperado:** Status 400 con body similar a:
+```json
+{
+  "code": "INSUFFICIENT_FUNDS",
+  "message": "Insufficient funds",
+  "path": "/transactions",
+  "timestamp": "..."
+}
+```
 
 ### Error: Monto negativo
 ```bash
@@ -172,7 +202,20 @@ curl -X POST http://localhost:3000/transactions \
   }'
 ```
 
-**Resultado esperado:** Status 400 con mensaje de validación
+**Resultado esperado:** Status 400 envuelto por el filtro global:
+```json
+{
+  "code": "TECHNICAL_ERROR",
+  "message": ["amount must be a positive number"],
+  "path": "/transactions",
+  "timestamp": "...",
+  "details": {
+    "message": ["amount must be a positive number"],
+    "error": "Bad Request",
+    "statusCode": 400
+  }
+}
+```
 
 ### Error: Origen y destino iguales
 ```bash
@@ -185,7 +228,15 @@ curl -X POST http://localhost:3000/transactions \
   }'
 ```
 
-**Resultado esperado:** Status 400 con mensaje de error
+**Resultado esperado:** Status 400 con body similar a:
+```json
+{
+  "code": "INVALID_TRANSACTION_STATE",
+  "message": "Origin and destination cannot be the same",
+  "path": "/transactions",
+  "timestamp": "..."
+}
+```
 
 ## Ver Respuestas Formateadas (con jq)
 

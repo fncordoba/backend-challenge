@@ -49,6 +49,18 @@ yarn start:prod
 
 ## Endpoints
 
+### POST /users
+Crea un nuevo usuario en el sistema (útil para no depender solo del seed).
+
+**Body:**
+```json
+{
+  "name": "Ana Gomez",
+  "email": "ana@example.com",
+  "balance": 50000
+}
+```
+
 ### POST /transactions
 Crea una nueva transacción entre dos usuarios.
 
@@ -76,20 +88,12 @@ Rechaza una transacción pendiente sin modificar saldos.
 
 ## Testing
 
-### Tests unitarios
+### Tests unitarios de casos de uso
 ```bash
 yarn test
 ```
 
-### Tests de integración
-```bash
-yarn test:e2e
-```
-
-### Cobertura
-```bash
-yarn test:cov
-```
+> Los flujos end-to-end (creación, aprobación, errores) se validan con cURL y SQL. Ver `CURL_COMMANDS.md` y `SQL_VALIDATION.md`.
 
 ## Outbox Worker
 
@@ -100,13 +104,13 @@ yarn outbox:worker
 
 ## Scripts disponibles
 
-- `yarn start:dev`: inicia en modo desarrollo
+- `yarn start`: inicia la aplicación (NestJS con ts-node)
+- `yarn start:dev`: inicia en modo desarrollo con hot-reload
 - `yarn build`: compila el proyecto
 - `yarn start:prod`: inicia en modo producción
 - `yarn migrate`: ejecuta migraciones
 - `yarn seed`: crea datos de prueba
-- `yarn test`: ejecuta tests unitarios
-- `yarn test:e2e`: ejecuta tests de integración
+- `yarn test`: ejecuta tests unitarios de casos de uso
 - `yarn outbox:worker`: inicia worker de outbox
 - `yarn ci`: lint + tests + build
 

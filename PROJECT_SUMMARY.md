@@ -304,33 +304,36 @@ src/
 - Validan integración entre capas
 
 **Tests Implementados:**
-- ✅ `create-transaction.usecase.spec.ts` - 7 tests
-- ✅ `approve-transaction.usecase.spec.ts` - 4 tests
-- ✅ `transactions.integration.spec.ts` - 4 tests
+- ✅ `create-transaction.usecase.spec.ts` - tests unitarios del caso de uso de creación (reglas de monto, existencia de usuarios, saldo, outbox, rollback, origen ≠ destino)
+- ✅ `approve-transaction.usecase.spec.ts` - tests unitarios del caso de uso de aprobación (existencia, estado pending, saldo, actualización de balances)
 
-**Tests Faltantes:**
+**Tests Faltantes (opcional / futuros):**
 - ⚠️ Tests para `reject-transaction.usecase`
 - ⚠️ Tests de concurrencia (múltiples transacciones simultáneas)
 
 ## Endpoints Implementados
 
-### 1. POST /transactions ✅
+### 1. POST /users ✅
+- Crea usuarios nuevos (para no depender solo del seed)
+- Tests: se validó manualmente con cURL y SQL
+
+### 2. POST /transactions ✅
 - Crea transacción entre dos usuarios
 - Aplica reglas de negocio (monto > 50k = pending)
-- Tests: unitarios e integración
+- Tests: unitarios (reglas de negocio) + validación manual end-to-end
 
-### 2. GET /transactions?userId={userId} ✅
+### 3. GET /transactions?userId={userId} ✅
 - Lista transacciones de un usuario
 - Ordenadas por fecha descendente
 - Cache con Redis (opcional)
-- Tests: integración
+- Tests: validación manual con cURL/SQL
 
-### 3. PATCH /transactions/:id/approve ✅
+### 4. PATCH /transactions/:id/approve ✅
 - Aprueba transacción pendiente
 - Realiza movimiento de fondos
-- Tests: unitarios e integración
+- Tests: unitarios + validación manual end-to-end
 
-### 4. PATCH /transactions/:id/reject ✅
+### 5. PATCH /transactions/:id/reject ✅
 - Rechaza transacción pendiente
 - No modifica saldos
 - Tests: pendientes
