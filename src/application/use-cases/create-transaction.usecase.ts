@@ -17,14 +17,7 @@ import {
   InvalidTransactionStateException,
   UserNotFoundException,
 } from '../../domain/exceptions/domain.exceptions';
-import { QueryRunner } from 'typeorm';
-import { randomUUID } from 'crypto';
-
-export interface CreateTransactionDTO {
-  originId: string;
-  destinationId: string;
-  amount: number;
-}
+import { CreateTransactionDTO } from '../../shared/dto/create-transaction.dto';
 
 @Injectable()
 export class CreateTransactionUseCase {
@@ -42,6 +35,10 @@ export class CreateTransactionUseCase {
   ) {}
 
   async execute(dto: CreateTransactionDTO): Promise<Transaction> {
+    // Orquestador principal de creación de transacciones:
+    // - Valida reglas de negocio (monto, usuarios, saldo, origen≠destino)
+    // - Coordina operación transaccional (pessimistic locking, débito/crédito)
+    // - Publica eventos en outbox y limpia cache relacionada
     if (dto.amount <= 0) {
       throw new Error('Amount must be positive');
     }
@@ -75,13 +72,11 @@ export class CreateTransactionUseCase {
 
       const status: TransactionStatus = dto.amount > 50000 ? 'pending' : 'confirmed';
 
-      const transaction = new Transaction(
-        randomUUID(),
+      const transaction = Transaction.createNew(
         dto.originId,
         dto.destinationId,
         dto.amount,
         status,
-        new Date(),
       );
 
       const savedTransaction = await this.transactionRepository.create(

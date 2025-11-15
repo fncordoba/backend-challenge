@@ -31,8 +31,15 @@ export class TransactionsController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Crear una nueva transacción' })
   @ApiResponse({ status: 201, description: 'Transacción creada exitosamente' })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
-  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Error de negocio o validación. Ejemplos de códigos: INVALID_TRANSACTION_STATE, INSUFFICIENT_FUNDS, TECHNICAL_ERROR (validación de DTO).',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Usuario no encontrado (código: USER_NOT_FOUND).',
+  })
   async create(@Body() dto: CreateTransactionDTO): Promise<Transaction> {
     return this.createTransactionUseCase.execute(dto);
   }
@@ -49,8 +56,15 @@ export class TransactionsController {
   @ApiOperation({ summary: 'Aprobar una transacción pendiente' })
   @ApiParam({ name: 'id', description: 'ID de la transacción' })
   @ApiResponse({ status: 200, description: 'Transacción aprobada' })
-  @ApiResponse({ status: 404, description: 'Transacción no encontrada' })
-  @ApiResponse({ status: 400, description: 'Estado inválido' })
+  @ApiResponse({
+    status: 404,
+    description: 'Transacción no encontrada (código: TRANSACTION_NOT_FOUND).',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Error de negocio: estado inválido o saldo insuficiente al aprobar. Códigos: INVALID_TRANSACTION_STATE, INSUFFICIENT_FUNDS.',
+  })
   async approve(@Param('id') id: string): Promise<Transaction> {
     return this.approveTransactionUseCase.execute(id);
   }
@@ -59,8 +73,14 @@ export class TransactionsController {
   @ApiOperation({ summary: 'Rechazar una transacción pendiente' })
   @ApiParam({ name: 'id', description: 'ID de la transacción' })
   @ApiResponse({ status: 200, description: 'Transacción rechazada' })
-  @ApiResponse({ status: 404, description: 'Transacción no encontrada' })
-  @ApiResponse({ status: 400, description: 'Estado inválido' })
+  @ApiResponse({
+    status: 404,
+    description: 'Transacción no encontrada (código: TRANSACTION_NOT_FOUND).',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Error de negocio: estado inválido (código: INVALID_TRANSACTION_STATE).',
+  })
   async reject(@Param('id') id: string): Promise<Transaction> {
     return this.rejectTransactionUseCase.execute(id);
   }

@@ -34,6 +34,11 @@ export class ApproveTransactionUseCase {
   ) {}
 
   async execute(transactionId: string): Promise<Transaction> {
+    // Use case de aprobación:
+    // - Garantiza que la transacción exista y esté pending
+    // - Usa locking pesimista para debitar origen y acreditar destino
+    // - Actualiza la transacción a confirmed y emite evento de outbox
+    // - Invalida cache relacionada con las cuentas afectadas
     const queryRunner = await this.dbConnection.createQueryRunner();
     await queryRunner.startTransaction();
 

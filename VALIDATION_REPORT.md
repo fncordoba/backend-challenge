@@ -127,7 +127,7 @@
 ## Tests Implementados
 
 ### Tests Unitarios
-1. ✅ `create-transaction.usecase.spec.ts` - 7 tests
+1. ✅ `create-transaction.usecase.spec.ts`
    - Monto negativo
    - Usuario origen no encontrado
    - Usuario destino no encontrado
@@ -135,19 +135,16 @@
    - Crear transacción confirmada (≤50k)
    - Crear transacción pendiente (>50k)
    - Rollback en error
+   - Origen y destino iguales (regla de negocio específica)
 
-2. ✅ `approve-transaction.usecase.spec.ts` - 4 tests
+2. ✅ `approve-transaction.usecase.spec.ts`
    - Transacción no encontrada
    - Transacción no está pendiente
    - Saldo insuficiente al aprobar
    - Aprobar transacción exitosamente
 
 ### Tests de Integración
-1. ✅ `transactions.integration.spec.ts` - 4 tests
-   - Crear transacción ≤50k (confirmada automáticamente)
-   - Crear transacción >50k (pendiente)
-   - Aprobar transacción pendiente
-   - Listar transacciones de usuario
+- Actualmente no se mantienen tests de integración automatizados; los flujos end-to-end se validan con cURL y SQL (`CURL_COMMANDS.md`, `SQL_VALIDATION.md`).
 
 ---
 
@@ -155,7 +152,6 @@
 
 ### Tests Unitarios
 - ❌ `reject-transaction.usecase.spec.ts` - No existe
-- ❌ Test para validar origen != destino en create-transaction
 
 ### Tests de Integración
 - ❌ Test para PATCH /transactions/:id/reject
@@ -165,7 +161,7 @@
 
 ## Cobertura Estimada
 
-- **Endpoints:** 75% (3/4 con tests completos)
-- **Reglas de Negocio:** 83% (5/6 con tests)
-- **Use Cases:** 67% (2/3 con tests unitarios completos)
+- **Endpoints:** foco en casos de uso de negocio; validación manual complementa la falta de tests de controller
+- **Reglas de Negocio:** todas las reglas críticas de creación/aprobación de transacciones están cubiertas por tests unitarios
+- **Use Cases:** 2 casos de uso críticos (create/approve) con buena cobertura; reject pendiente de tests
 

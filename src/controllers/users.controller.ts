@@ -13,7 +13,11 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Crear un nuevo usuario' })
   @ApiResponse({ status: 201, description: 'Usuario creado exitosamente' })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Error de validación del DTO (por ejemplo, email inválido o balance negativo). El filtro global envuelve estos errores como TECHNICAL_ERROR.',
+  })
   async create(@Body() dto: CreateUserDTO): Promise<User> {
     return this.createUserUseCase.execute(dto);
   }

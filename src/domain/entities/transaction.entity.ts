@@ -1,5 +1,7 @@
 export type TransactionStatus = 'pending' | 'confirmed' | 'rejected';
 
+import { randomUUID } from 'crypto';
+
 export class Transaction {
   constructor(
     public id: string,
@@ -29,6 +31,15 @@ export class Transaction {
 
   requiresApproval(): boolean {
     return this.amount > 50000;
+  }
+
+  static createNew(
+    originId: string,
+    destinationId: string,
+    amount: number,
+    status: TransactionStatus,
+  ): Transaction {
+    return new Transaction(randomUUID(), originId, destinationId, amount, status, new Date());
   }
 }
 
