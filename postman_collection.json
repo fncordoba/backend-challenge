@@ -1,0 +1,121 @@
+{
+  "info": {
+    "name": "Belo Fintech API",
+    "description": "Collection para la mini plataforma fintech",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Create Transaction <= 50k",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"originId\": \"user-1\",\n  \"destinationId\": \"user-2\",\n  \"amount\": 10000\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/transactions",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["transactions"]
+            }
+          }
+        },
+        {
+          "name": "Create Transaction > 50k (Pending)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"originId\": \"user-1\",\n  \"destinationId\": \"user-2\",\n  \"amount\": 60000\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/transactions",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["transactions"]
+            }
+          }
+        },
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/transactions?userId=user-1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["transactions"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "user-1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Transaction",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/transactions/:id/approve",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["transactions", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "tx-id-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Transaction",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/transactions/:id/reject",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["transactions", ":id", "reject"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "tx-id-here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

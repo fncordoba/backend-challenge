@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Create transaction <= 50k",
+    "curl": "curl -X POST http://localhost:3000/transactions -H 'Content-Type: application/json' -d '{\"originId\":\"user-1\",\"destinationId\":\"user-2\",\"amount\":10000}'"
+  },
+  {
+    "name": "Create transaction > 50k (pending)",
+    "curl": "curl -X POST http://localhost:3000/transactions -H 'Content-Type: application/json' -d '{\"originId\":\"user-1\",\"destinationId\":\"user-2\",\"amount\":60000}'"
+  },
+  {
+    "name": "List transactions",
+    "curl": "curl http://localhost:3000/transactions?userId=user-1"
+  },
+  {
+    "name": "Approve transaction",
+    "curl": "curl -X PATCH http://localhost:3000/transactions/{id}/approve"
+  },
+  {
+    "name": "Reject transaction",
+    "curl": "curl -X PATCH http://localhost:3000/transactions/{id}/reject"
+  }
+]
+
